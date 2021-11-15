@@ -18,6 +18,7 @@ pip3 install growpy
 ## Example Usage
 
 ```python
+import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # Constuct/Import data
