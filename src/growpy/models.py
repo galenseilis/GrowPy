@@ -156,6 +156,38 @@ class HyperbolasticTypeIII(tf.keras.Model):
     https://en.wikipedia.org/wiki/Hyperbolastic_functions#Function_H3
     '''
 
+class Signum(tf.keras.Model):
+
+    def __init__(self, units=1, input_dim=1):
+        super().__init__()
+        self.a=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.b=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.c=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.d=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+    def call(self, inputs):
+        result = self.b * inputs
+        result = result + self.c
+        result = tf.math.sign(result)
+        result = self.a * result
+        result = result + self.d
+        return result
+
 class VanGenuchtenGupta(tf.keras.Model):
     '''
     https://en.wikipedia.org/wiki/Van_Genuchten%E2%80%93Gupta_model
