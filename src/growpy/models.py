@@ -352,27 +352,3 @@ class VonBertalanffy(tf.keras.Model):
         return result
 
 
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    
-    model = MaasHoffman()
-    optimizer = tf.keras.optimizers.Nadam()
-    loss = tf.keras.losses.MeanSquaredError()
-    model.compile(optimizer=optimizer, loss=loss)
-    x = tf.abs(tf.random.uniform((100000,1), 0, 10))
-    y = 500 / (1 + (500-50)/50 * tf.exp(-0.5 * x))
-    history = model.fit(x, y, epochs=100, batch_size=1000)
-    print(model.weights)
-
-    fig, axes = plt.subplots(2, 1)
-    axes[0].scatter(x,y, alpha=0.5, s=1)
-    axes[0].scatter(x, model(x), alpha=0.5, s=1)
-    axes[0].set_ylabel('y')
-    axes[0].set_xlabel('x')
-
-    axes[1].plot(history.history['loss'])
-    axes[1].set_ylabel('MSE')
-    axes[1].set_xlabel('Epoch')
-    plt.show()
-
-
