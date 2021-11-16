@@ -18,6 +18,7 @@ pip3 install growpy
 ## Example Usage
 
 ```python
+from growpy import models
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
