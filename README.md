@@ -27,7 +27,7 @@ x = tf.abs(tf.random.uniform((100000,1), 0, 10))
 y = 500 / (1 + (500-50)/50 * tf.exp(-0.5 * x))
 
 # Construct model
-model = GeneralizedLogistic()
+model = models.GeneralizedLogistic()
 optimizer = tf.keras.optimizers.Nadam()
 loss = tf.keras.losses.MeanSquaredError()
 model.compile(optimizer=optimizer, loss=loss)

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: growpy
-Version: 0.0.4
+Version: 0.0.8
 Summary: Trainable growth curves.
 Home-page: https://github.com/galenseilis/GrowPy
 Author: Galen Seilis
@@ -35,6 +35,7 @@ pip3 install growpy
 ## Example Usage
 
 ```python
+from growpy import models
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
@@ -43,7 +44,7 @@ x = tf.abs(tf.random.uniform((100000,1), 0, 10))
 y = 500 / (1 + (500-50)/50 * tf.exp(-0.5 * x))
 
 # Construct model
-model = MaasHoffman()
+model = models.GeneralizedLogistic()
 optimizer = tf.keras.optimizers.Nadam()
 loss = tf.keras.losses.MeanSquaredError()
 model.compile(optimizer=optimizer, loss=loss)
