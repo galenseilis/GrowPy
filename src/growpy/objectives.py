@@ -5,7 +5,26 @@ class GCNLL(tf.keras.losses.Loss):
     '''
     Negative of the conditional log-likelihood of the
     multivariate Gaussian distribution.
+
+    Attributes
+    ----------
+        name : str (default="gaussian_conditional_negative_log_likelihood")
+            Name of the object.
+        residuals : array-like[float]
+            Errors of the model.
+        cov : array-like[float]
+            Estimated conditional covariance matrix.
+        NLL : float
+            Negative log-likelihood.
+
+    Methods
+    -------
+        call : 
     '''
+
+    def __init__(self):
+        super().__init__()
+        self.name = "gaussian_conditional_negative_log_likelihood"
 
     def call(self, y_true, y_pred):
         pi = tf.cast(np.pi, dtype=tf.float64)
@@ -22,11 +41,11 @@ class GCNLL(tf.keras.losses.Loss):
         self.cov = self.cov / m
         cov_inv = tf.linalg.inv(self.cov)
         cov_det = tf.linalg.det(self.cov)
-        self.LL = n * tf.math.log(2 * pi)
-        self.LL = tf.math.log(cov_det) + self.LL
+        self.NLL = n * tf.math.log(2 * pi)
+        self.NLL = tf.math.log(cov_det) + self.NLL
         for row in self.residuals:
             prod = tf.tensordot(row, cov_inv, 1)
             prod = tf.tensordot(prod, row, 1)
-            self.LL = prod + self.LL
-        self.LL = self.LL / 2
-        return self.LL
+            self.NLL = prod + self.NLL
+        self.NLL = self.NLL / 2
+        return self.NLL

@@ -250,6 +250,35 @@ class MaasHoffman(tf.keras.Model):
             self.c * tf.ones(inputs.shape)
             )
 
+class QuickModel(tf.keras.Model):
+
+    def __init__(self, function, units=1, input_dim=1, **kwargs):
+        super().__init__()
+        self.a=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.b=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.c=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.d=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+        self.function = function
+
+    def call(self, inputs):
+            return self.a * self.function(self.b * inputs + self.c) + self.d
+
 class Signum(tf.keras.Model):
 
     def __init__(self, units=1, input_dim=1, **kwargs):
@@ -345,7 +374,6 @@ class VanGenuchtenGupta(tf.keras.Model):
             trainable=True
             )
 
-
     def call(self, inputs):
         result = self.EC50 / inputs
         result = tf.math.pow(result, self.n)
@@ -432,6 +460,7 @@ class SEM(tf.keras.Model):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
+    from selfstarts import IterativeGaussianGuess
 
     # Constuct/Import data
     x = tf.abs(tf.random.uniform((100000,1), 0, 10))
@@ -441,6 +470,10 @@ if __name__ == '__main__':
     model = Signum()
     optimizer = tf.keras.optimizers.Nadam(learning_rate=0.5)
     loss = tf.keras.losses.MeanSquaredError()
+
+    starter = IterativeGaussianGuess(model, x, y, loss)
+    model = starter(0, 1000, iters=100000)
+    
     model.compile(optimizer=optimizer, loss=loss)
 
 
