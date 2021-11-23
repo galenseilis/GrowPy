@@ -83,6 +83,7 @@ class GeneralizedLogistic(tf.keras.Model):
             initializer='random_normal',
             trainable=True
             )
+        
 
     def call(self, inputs):
         '''
@@ -124,6 +125,11 @@ class Gaussian(tf.keras.Model):
             initializer='random_uniform',
             trainable=True
             )
+
+    def self_start(self, x, y):
+        self.a = tf.Variable(tf.math.reduce_max(y), trainable=True, name='height')
+        self.b = tf.Variable(tf.reduce_mean([x[i] for i in tf.argmax(y)]), trainable=True, name='location')
+        self.c = tf.Variable(3 * tf.math.reduce_std(x), trainable=True, name='width')
 
 
     def call(self, inputs):
@@ -279,6 +285,28 @@ class QuickModel(tf.keras.Model):
     def call(self, inputs):
             return self.a * self.function(self.b * inputs + self.c) + self.d
 
+class QuickExpansion(tf.keras.Model):
+
+    def __init__(self, function, terms=3, units=1, input_dim=1, **kwargs):
+        super().__init__()
+
+        self.models = []
+        for i in range(terms):
+            _model = QuickModel(function)
+            self.models.append(_model)
+
+        self.d=self.add_weight(
+                shape=(units, input_dim),
+                initializer='random_normal',
+                trainable=True
+                )
+    def call(self, inputs):
+        result = self.d
+        for _model in self.models:
+            result = result + _model(inputs)
+        return result
+        
+
 class Signum(tf.keras.Model):
 
     def __init__(self, units=1, input_dim=1, **kwargs):
@@ -407,6 +435,19 @@ class Verhulst(tf.keras.Model):
             initializer="random_uniform",
             trainable=True
             )
+        
+    def self_start(self, x, y, optimizer=tf.keras.optimizers.Nadam(learning_rate=0.1), loss=tf.keras.losses.MeanSquaredError(), epochs=2):
+        model = Linear()
+        model.compile(optimizer=optimizer, loss=loss)
+        self.starter_history = model.fit(x, y, epochs=epochs)
+        self.r =  tf.Variable(tf.sign(model.w) * tf.math.log1p(tf.abs(model.w)), trainable=True, name='unimpeded_growth_rate')
+        self.p0 = tf.Variable(model.b, trainable=True, name='initial_population')
+        if model.w > 0:
+            self.k = tf.Variable(tf.reduce_max(y), trainable=True, name='carrying_capacity')
+        elif model.w < 0:
+            self.k = tf.Variable(tf.reduce_max(y), trainable=True, name='carrying_capacity')
+        else:
+            self.k = tf.Variable(tf.reduce_mean(y), trainable=True, name='carrying_capacity')
 
     def call(self, inputs):
         result = - self.r * inputs
@@ -460,36 +501,37 @@ class SEM(tf.keras.Model):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from selfstarts import IterativeGaussianGuess
-
+    import numpy as np
+    import seaborn as sns
+    
     # Constuct/Import data
-    x = tf.abs(tf.random.uniform((100000,1), 0, 10))
-    y = 500 / (1 + (500-50)/50 * tf.exp(-0.5 * x))
+    x = tf.random.uniform((100000,1), 0, 10)
+    y = 500 / (1 + (500-50)/50 * tf.exp(0.5 * x))
 
-    # Construct model
-    model = Signum()
-    optimizer = tf.keras.optimizers.Nadam(learning_rate=0.5)
+    # Defined model
+    model = Gaussian()
+    optimizer = tf.keras.optimizers.Nadam(learning_rate=0.0001)
     loss = tf.keras.losses.MeanSquaredError()
 
-    starter = IterativeGaussianGuess(model, x, y, loss)
-    model = starter(0, 1000, iters=100000)
-    
+        
     model.compile(optimizer=optimizer, loss=loss)
 
+    # Self start parameters
+    model.self_start(x, y)
+    print(model.weights)
 
-##    # Train model
-##    history = model.fit(x, y, epochs=20, batch_size=1000)
-##
+    # Train
+    history = model.fit(x, y, epochs=1000)
+    print(model.weights)
+
 ##    # Inspect results
-##    print(model.weights)
-##
-##    fig, axes = plt.subplots(2, 1)
-##    axes[0].scatter(x,y, alpha=0.5, s=1)
-##    axes[0].scatter(x, model(x), alpha=0.5, s=1)
-##    axes[0].set_ylabel('y')
-##    axes[0].set_xlabel('x')
-##
-##    axes[1].plot(history.history['loss'])
-##    axes[1].set_ylabel(loss.name)
-##    axes[1].set_xlabel('Epoch')
-##    plt.show()
+    fig, axes = plt.subplots(2, 1)
+    axes[0].scatter(x,y, alpha=0.5, s=1)
+    axes[0].scatter(x, model(x), alpha=0.5, s=1)
+    axes[0].set_ylabel('y')
+    axes[0].set_xlabel('x')
+    
+    axes[1].plot(history.history['loss'], label='Model')
+    axes[1].set_ylabel(loss.name)
+    axes[1].set_xlabel('Epoch')
+    plt.show()
