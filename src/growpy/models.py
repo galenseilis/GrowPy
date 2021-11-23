@@ -129,7 +129,7 @@ class Gaussian(tf.keras.Model):
     def self_start(self, x, y):
         self.a = tf.Variable(tf.math.reduce_max(y), trainable=True, name='height')
         self.b = tf.Variable(tf.reduce_mean([x[i] for i in tf.argmax(y)]), trainable=True, name='location')
-        self.c = tf.Variable(3 * tf.math.reduce_std(x), trainable=True, name='width')
+        self.c = tf.Variable(tf.math.reduce_std(x), trainable=True, name='width')
 
 
     def call(self, inputs):
